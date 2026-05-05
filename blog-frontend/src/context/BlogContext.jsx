@@ -4,7 +4,7 @@ import useFetch from '../hooks/useFetch';
 
 export const BlogContext = createContext();
 
-const API = 'http://localhost:5000';
+const API = 'https://blog-backend-xxxx.up.railway.app';
 
 function blogReducer(state, action) {
   switch (action.type) {
