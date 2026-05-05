@@ -6,17 +6,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// GET 
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  res.json({});
+});
+
+// GET all blogs
 app.get('/blogs', (req, res) => {
-  const blogs = db.prepare('SELECT * FROM blogs ORDER BY createdAt DESC').all();
-  res.json(blogs);
+  db.all('SELECT * FROM blogs ORDER BY createdAt DESC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 });
 
 // GET single blog
 app.get('/blogs/:id', (req, res) => {
-  const blog = db.prepare('SELECT * FROM blogs WHERE id = ?').get(req.params.id);
-  if (!blog) return res.status(404).json({ error: 'Blog not found' });
-  res.json(blog);
+  db.get('SELECT * FROM blogs WHERE id = ?', [req.params.id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Blog not found' });
+    res.json(row);
+  });
 });
 
 // POST create blog
@@ -25,41 +33,42 @@ app.post('/blogs', (req, res) => {
   if (!title || !body)
     return res.status(400).json({ error: 'Title and body are required' });
 
-  const result = db
-    .prepare('INSERT INTO blogs (title, body, createdAt) VALUES (?, ?, ?)')
-    .run(title, body, new Date().toISOString());
-
-  const blog = db.prepare('SELECT * FROM blogs WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json(blog);
+  const createdAt = new Date().toISOString();
+  db.run(
+    'INSERT INTO blogs (title, body, createdAt) VALUES (?, ?, ?)',
+    [title, body, createdAt],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      db.get('SELECT * FROM blogs WHERE id = ?', [this.lastID], (err, row) => {
+        res.status(201).json(row);
+      });
+    }
+  );
 });
 
 // PUT update blog
 app.put('/blogs/:id', (req, res) => {
   const { title, body } = req.body;
-  const blog = db.prepare('SELECT * FROM blogs WHERE id = ?').get(req.params.id);
-  if (!blog) return res.status(404).json({ error: 'Blog not found' });
-
-  db.prepare('UPDATE blogs SET title = ?, body = ? WHERE id = ?').run(
-    title,
-    body,
-    req.params.id
+  db.run(
+    'UPDATE blogs SET title = ?, body = ? WHERE id = ?',
+    [title, body, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      db.get('SELECT * FROM blogs WHERE id = ?', [req.params.id], (err, row) => {
+        if (!row) return res.status(404).json({ error: 'Blog not found' });
+        res.json(row);
+      });
+    }
   );
-
-  const updated = db.prepare('SELECT * FROM blogs WHERE id = ?').get(req.params.id);
-  res.json(updated);
 });
 
 // DELETE blog
 app.delete('/blogs/:id', (req, res) => {
-  const blog = db.prepare('SELECT * FROM blogs WHERE id = ?').get(req.params.id);
-  if (!blog) return res.status(404).json({ error: 'Blog not found' });
-
-  db.prepare('DELETE FROM blogs WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Blog deleted' });
+  db.run('DELETE FROM blogs WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Blog deleted' });
+  });
 });
 
-app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
-  res.json({});
-});
-
-app.listen(5000, () => console.log('Server running on http://localhost:5000'));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
