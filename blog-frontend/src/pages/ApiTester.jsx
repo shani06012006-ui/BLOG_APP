@@ -1,29 +1,32 @@
 import { useState, useContext } from 'react';
-import useFetch from '../hooks/useFetch';
 import { BlogContext } from '../context/BlogContext';
+
 const API = 'http://localhost:5000';
 
 function ApiTester() {
-  const { blogs, deleteBlog } = useContext(BlogContext);
+  const { blogs, createBlog, deleteBlog } = useContext(BlogContext);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [response, setResponse] = useState(null);
   const [activeTab, setActiveTab] = useState('POST');
-
-  const { execute: postBlog, loading: posting } = useFetch(`${API}/blogs`, 'POST');
-  const { execute: getBlogs } = useFetch(`${API}/blogs`, 'GET', null, false);
+  const [loading, setLoading] = useState(false);
 
   const handlePost = async () => {
     if (!title || !body) return;
-    const result = await postBlog({ title, body });
-    setResponse(result);
-    setTitle('');
-    setBody('');
+    setLoading(true);
+    try {
+      await createBlog({ title, body });
+      setResponse({ message: 'Blog created!', title, body });
+      setTitle('');
+      setBody('');
+    } catch {
+      setResponse({ error: 'Failed to create blog' });
+    }
+    setLoading(false);
   };
 
   const handleGet = async () => {
-    const result = await getBlogs();
-    setResponse(result);
+    setResponse(blogs);
   };
 
   const handleDelete = async (id) => {
@@ -38,7 +41,6 @@ function ApiTester() {
         <span className="api-base-url">Base URL: {API}</span>
       </div>
 
-      {/* Tab Buttons */}
       <div className="tab-bar">
         {['POST', 'GET', 'DELETE'].map((tab) => (
           <button
@@ -52,7 +54,6 @@ function ApiTester() {
       </div>
 
       <div className="tester-layout">
-        {/* Left — Request */}
         <div className="tester-card">
           <h3>Request</h3>
 
@@ -79,8 +80,8 @@ function ApiTester() {
                   rows={5}
                 />
               </div>
-              <button className="btn btn-primary" onClick={handlePost} disabled={posting}>
-                {posting ? 'Sending...' : '▶ Send Request'}
+              <button className="btn btn-primary" onClick={handlePost} disabled={loading}>
+                {loading ? 'Sending...' : '▶ Send Request'}
               </button>
             </div>
           )}
@@ -92,8 +93,8 @@ function ApiTester() {
                 <span className="endpoint">/blogs</span>
               </div>
               <p className="hint">Fetches all blogs from the backend.</p>
-              <button className="btn btn-primary" onClick={handleGet} disabled={getting}>
-                {getting ? 'Fetching...' : ' Send Request'}
+              <button className="btn btn-primary" onClick={handleGet}>
+                ▶ Send Request
               </button>
             </div>
           )}
@@ -104,7 +105,7 @@ function ApiTester() {
                 <span className="method-badge delete">DELETE</span>
                 <span className="endpoint">/blogs/:id</span>
               </div>
-              <p className="hint">Click Delete on any blog below to remove it.</p>
+              <p className="hint">Click Delete on any blog below.</p>
               <div className="delete-list">
                 {blogs.length === 0 && <p className="empty-hint">No blogs available.</p>}
                 {blogs.map((blog) => (
@@ -113,11 +114,8 @@ function ApiTester() {
                       <span className="id-badge">ID: {blog.id}</span>
                       <span className="delete-title">{blog.title}</span>
                     </div>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(blog.id)}
-                    >
-                      Delete
+                    <button className="btn btn-danger" onClick={() => handleDelete(blog.id)}>
+                      🗑️ Delete
                     </button>
                   </div>
                 ))}
@@ -126,7 +124,6 @@ function ApiTester() {
           )}
         </div>
 
-        {/* Right — Response */}
         <div className="tester-card">
           <h3>Response</h3>
           {response ? (

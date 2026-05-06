@@ -15,7 +15,7 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/blogs" className="brand">📝 BlogApp</Link>
+      <Link to="/blogs" className="brand"> BlogApp</Link>
       <div className="nav-links">
         <Link to="/blogs">All Blogs</Link>
         <Link to="/createblog" className="btn-nav">+ New Blog</Link>
