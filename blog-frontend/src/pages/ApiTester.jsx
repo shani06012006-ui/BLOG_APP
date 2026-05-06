@@ -45,7 +45,7 @@ function ApiTester() {
   return (
     <div className="container">
       <div className="page-header">
-        <h1>🔌 API Tester</h1>
+        <h1> API Tester</h1>
         <span className="api-base-url">Base URL: {API}</span>
       </div>
 
