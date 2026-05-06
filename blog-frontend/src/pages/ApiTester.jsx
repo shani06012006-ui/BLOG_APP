@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import axios from 'axios';
 import { BlogContext } from '../context/BlogContext';
 
 const API = 'http://localhost:5000';
@@ -26,7 +27,14 @@ function ApiTester() {
   };
 
   const handleGet = async () => {
-    setResponse(blogs);
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/blogs`);
+      setResponse(res.data);
+    } catch (err) {
+      setResponse({ error: err.message });
+    }
+    setLoading(false);
   };
 
   const handleDelete = async (id) => {
@@ -81,7 +89,7 @@ function ApiTester() {
                 />
               </div>
               <button className="btn btn-primary" onClick={handlePost} disabled={loading}>
-                {loading ? 'Sending...' : '▶ Send Request'}
+                {loading ? 'Sending...' : ' Send Request'}
               </button>
             </div>
           )}
@@ -93,8 +101,8 @@ function ApiTester() {
                 <span className="endpoint">/blogs</span>
               </div>
               <p className="hint">Fetches all blogs from the backend.</p>
-              <button className="btn btn-primary" onClick={handleGet}>
-                ▶ Send Request
+              <button className="btn btn-primary" onClick={handleGet} disabled={loading}>
+                {loading ? 'Fetching...' : ' Send Request'}
               </button>
             </div>
           )}
@@ -115,7 +123,7 @@ function ApiTester() {
                       <span className="delete-title">{blog.title}</span>
                     </div>
                     <button className="btn btn-danger" onClick={() => handleDelete(blog.id)}>
-                      🗑️ Delete
+                       Delete
                     </button>
                   </div>
                 ))}
