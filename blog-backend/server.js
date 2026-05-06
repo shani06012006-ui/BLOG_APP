@@ -3,7 +3,14 @@ const cors = require('cors');
 const pool = require('./database');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://blog-app-phi-rosy.vercel.app',
+    'https://blog-6uq8yuyb7-shani06012006-uis-projects.vercel.app',
+    'http://localhost:5173'
+  ]
+}));
+
 app.use(express.json());
 
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
