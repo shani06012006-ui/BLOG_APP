@@ -1,7 +1,6 @@
 import { useState, useContext } from 'react';
 import useFetch from '../hooks/useFetch';
 import { BlogContext } from '../context/BlogContext';
-
 const API = 'http://localhost:5000';
 
 function ApiTester() {
@@ -12,7 +11,7 @@ function ApiTester() {
   const [activeTab, setActiveTab] = useState('POST');
 
   const { execute: postBlog, loading: posting } = useFetch(`${API}/blogs`, 'POST');
-  const { execute: getBlogs, loading: getting } = useFetch(`${API}/blogs`, 'GET');
+  const { execute: getBlogs } = useFetch(`${API}/blogs`, 'GET', null, false);
 
   const handlePost = async () => {
     if (!title || !body) return;

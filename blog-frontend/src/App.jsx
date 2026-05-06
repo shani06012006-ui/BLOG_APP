@@ -36,9 +36,9 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <BlogProvider>
-          <AppRoutes />
+      <AuthProvider>       
+        <BlogProvider>   
+          <AppRoutes />    
         </BlogProvider>
       </AuthProvider>
     </BrowserRouter>

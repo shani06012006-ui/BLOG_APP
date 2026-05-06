@@ -2,9 +2,9 @@ import { createContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 import useFetch from '../hooks/useFetch';
 
-export const BlogContext = createContext();
+const API = 'https://blogapp-blog.up.railway.app';
 
-const API = 'https://blog-backend-xxxx.up.railway.app';
+export const BlogContext = createContext();
 
 function blogReducer(state, action) {
   switch (action.type) {
