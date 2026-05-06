@@ -578,3 +578,70 @@ body {
   text-align: center;
   padding: 20px;
 }
+
+
+/* ── THEME ── */
+body[data-theme='light'] {
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --subtext: #6b7280;
+  --border: #e5e7eb;
+  --navbar: #1a1a2e;
+}
+
+body[data-theme='dark'] {
+  --bg: #0f0f0f;
+  --card: #1a1a1a;
+  --text: #f0f0f0;
+  --subtext: #9ca3af;
+  --border: #2e2e2e;
+  --navbar: #000000;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.navbar {
+  background: var(--navbar);
+}
+
+.blog-card,
+.detail-card,
+.form-card,
+.auth-card,
+.empty-state {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+.blog-card-body p,
+.blog-date,
+.hint,
+.subtext {
+  color: var(--subtext);
+}
+
+.form-group input,
+.form-group textarea {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.theme-btn {
+  background: transparent;
+  border: 1.5px solid #ffffff40;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.theme-btn:hover {
+  background: #ffffff20;
+}
