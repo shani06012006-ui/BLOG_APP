@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('./database');
+const pool = require('./database');
 
 const app = express();
 app.use(cors());
@@ -10,64 +10,61 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
   res.json({});
 });
 
-// GET all blogs
-app.get('/blogs', (req, res) => {
-  db.all('SELECT * FROM blogs ORDER BY createdAt DESC', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+app.get('/blogs', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM blogs ORDER BY "createdAt" DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// GET single blog
-app.get('/blogs/:id', (req, res) => {
-  db.get('SELECT * FROM blogs WHERE id = ?', [req.params.id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: 'Blog not found' });
-    res.json(row);
-  });
+app.get('/blogs/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM blogs WHERE id = $1', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Blog not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST create blog
-app.post('/blogs', (req, res) => {
+app.post('/blogs', async (req, res) => {
   const { title, body } = req.body;
-  if (!title || !body)
-    return res.status(400).json({ error: 'Title and body are required' });
-
-  const createdAt = new Date().toISOString();
-  db.run(
-    'INSERT INTO blogs (title, body, createdAt) VALUES (?, ?, ?)',
-    [title, body, createdAt],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      db.get('SELECT * FROM blogs WHERE id = ?', [this.lastID], (err, row) => {
-        res.status(201).json(row);
-      });
-    }
-  );
+  if (!title || !body) return res.status(400).json({ error: 'Title and body are required' });
+  try {
+    const createdAt = new Date().toISOString();
+    const result = await pool.query(
+      'INSERT INTO blogs (title, body, "createdAt") VALUES ($1, $2, $3) RETURNING *',
+      [title, body, createdAt]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// PUT update blog
-app.put('/blogs/:id', (req, res) => {
+app.put('/blogs/:id', async (req, res) => {
   const { title, body } = req.body;
-  db.run(
-    'UPDATE blogs SET title = ?, body = ? WHERE id = ?',
-    [title, body, req.params.id],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      db.get('SELECT * FROM blogs WHERE id = ?', [req.params.id], (err, row) => {
-        if (!row) return res.status(404).json({ error: 'Blog not found' });
-        res.json(row);
-      });
-    }
-  );
+  try {
+    const result = await pool.query(
+      'UPDATE blogs SET title = $1, body = $2 WHERE id = $3 RETURNING *',
+      [title, body, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Blog not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// DELETE blog
-app.delete('/blogs/:id', (req, res) => {
-  db.run('DELETE FROM blogs WHERE id = ?', [req.params.id], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
+app.delete('/blogs/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM blogs WHERE id = $1', [req.params.id]);
     res.json({ message: 'Blog deleted' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
